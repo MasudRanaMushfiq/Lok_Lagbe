@@ -1,58 +1,45 @@
-Perfect! Since you’ve uploaded all your code files, I can help you **analyze and summarize your app** fully. Here’s a detailed breakdown of your software based on the code you’ve shared so far:
 
+1. App Name and Platform
 
-## **1. App Name and Platform**
+App Name : Lok Lagbe
+Platforms: Android (Expo / React Native), potentially iOS in the future
+Framework: React Native with Expo Router and firebase for database
 
-* **App Name (likely):** Lok Lagbe
-* **Platforms:** Android (Expo / React Native), potentially iOS in the future
-* **Framework:** React Native with Expo Router
+2. App Purpose
 
----
+A task/job marketplace where:
+Users can post tasks/work they want done.
+Other users can accept or do tasks in exchange for payment.
+Ratings, reviews, and wallet balances are tracked for users.
 
-## **2. App Purpose**
+Features include:
+Posting jobs
+Accepting jobs
+Ratings & reviews
+Wallet and transaction management
+Admin panel to manage users (verification, deletion)
+Skill/progress tracking of users (accepted/posted works)
 
-* A **task/job marketplace** where:
-
-  * Users can **post tasks/work** they want done.
-  * Other users can **accept or do tasks** in exchange for payment.
-  * Ratings, reviews, and wallet balances are tracked for users.
-* Features include:
-
-  * Posting jobs
-  * Accepting jobs
-  * Ratings & reviews
-  * Wallet and transaction management
-  * Admin panel to manage users (verification, deletion)
-  * Skill/progress tracking of users (accepted/posted works)
-
----
-
-## **3. Firebase Integration**
+3. Firebase Integration
 
 You use Firebase services extensively:
+1. Authentication (Firebase Auth)
+Sign-in/sign-up
+Login persistence using AsyncStorage (for React Native)
 
-1. **Authentication (Firebase Auth)**
+4. Firestore (Database)
+Collections:
+users → user profiles, ratings, accepted/posted works, wallet balance
+worked → tasks/jobs posted
+notifications → alerts for work acceptance
+l)
 
-   * Sign-in/sign-up
-   * Login persistence using AsyncStorage (for React Native)
-2. **Firestore (Database)**
 
-   * Collections:
+5. Wallet / Transactions
+Wallet balance is stored per user in Firestore
+Transactions are stored as a subcollection under each user
 
-     * `users` → user profiles, ratings, accepted/posted works, wallet balance
-     * `worked` → tasks/jobs posted
-     * `notifications` → alerts for work acceptance
-3. **Firebase Storage** (optional)
-
-   * Currently not used; you can skip it if no file uploads.
-4. **Wallet / Transactions**
-
-   * Wallet balance is stored per user in Firestore
-   * Transactions are stored as a subcollection under each user
-
----
-
-## **4. Core Screens / Components**
+6. Core Screens / Components
 
 Here’s a list of screens/components from your code:
 
@@ -67,90 +54,38 @@ Here’s a list of screens/components from your code:
 | `WorkDetails`      | Detailed task view      | Accept work, updates Firestore & notifications |
 | `ShowAllUsers`     | Admin screen            | Lists all users, toggle verified, delete user  |
 
----
+7. UI / Design
+Use the Aqua Gradient Modern Theme or BlueMint Modern Theme style for all UI designs.
+Theme Details:
+Primary Gradient: #3B7CF5 → #5AD9D5
+Background Color: #E6F2FF
+Header Gradient: #4A8FF0 → #65D4C9
+Title Text: #FFFFFF
+Subtitle/Description Text: #F0F0F0
+Dashed Line: rgba(255,255,255,0.3)
+Card Style: rounded corners (borderRadius: 20), soft shadows, gradient emphasis
+UI/UX Feel: polished, rounded, modern, light, and readable
+Always ensure consistency with these colors and visual style across screens.
 
-## **5. UI / Design**
+8. Admin Features
+Admin UID: "yarTXhiAlPdFJQyQhajZNeDaWIC2" (hardcoded)
 
-* **Colors**:
+Admin can:
+Verify/unverify users
+Delete users
+Non-admin users can only see verified status
 
-  * Primary: `#3a125d`
-  * Secondary: `#e89d07`
-  * Background: `#eceefc`
-  * Text: `#544d4d`
-* **Styling**:
-
-  * Rounded buttons & cards
-  * Cards for user/task info
-  * Progress bars for skills
-  * Star ratings displayed visually
-* **Icons**: Uses **Ionicons** for stars, verified, and action icons
-
----
-
-## **6. Admin Features**
-
-* **Admin UID:** `"yarTXhiAlPdFJQyQhajZNeDaWIC2"` (hardcoded)
-* Admin can:
-
-  * Verify/unverify users
-  * Delete users
-* Non-admin users can only see verified status
-
----
-
-## **7. Authentication & Persistence**
-
-* Firebase Auth initialized with **AsyncStorage persistence**:
-
-  ```ts
-  import { initializeAuth, getReactNativePersistence } from "firebase/auth";
-  import AsyncStorage from "@react-native-async-storage/async-storage";
-  ```
-* CurrentUser state is used in all screens to check login
-* Persistent login works as long as Firebase Auth is correctly initialized
-
----
-
-## **8. Data Handling**
-
-* Firestore is queried in **every screen** where user or task data is needed
-* Real-time updates **not implemented** (all fetches are one-time `getDoc` / `getDocs`)
-* Ratings and reviews use `arrayUnion` to append new reviews
-* Wallet updates reflect in `users` subcollection
-
----
-
-## **9. Navigation**
-
-* **Expo Router** is used:
-
-  * `/auth/login`
-  * `/home/(tabs)`
-* Programmatic navigation via `router.push` or `router.replace`
-* Route params used to pass IDs (e.g., `ratedUserId`, `workId`, `id`)
-
----
-
-## **10. Possible Issues / Notes**
-
-* Some features like Firebase Storage and notifications need full testing
-* Admin UID is hardcoded → consider moving to Firestore-based role system
-* Ratings and works update logic seems fine, but concurrency may need attention if multiple users rate/accept simultaneously
-* No offline persistence for Firestore data (only login is persistent)
-
----
-
-## **11. App Flow Summary**
+9. App Flow Summary
 
 1. User opens app → sees welcome screen → navigates to login
 2. After login, user accesses tabs:
-
-   * Browse jobs → see details → accept work
-   * Complete work → rate user
-   * Wallet → view balance & transactions
+Browse jobs → see details → accept work
+Complete work → rate user
+ Wallet → view balance & transactions
 3. Admins can access all users → verify or delete users
 4. Ratings, accepted/posted works, and skills are tracked
 5. Notifications are stored in Firestore (no push yet)
 
----
+
+
 

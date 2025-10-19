@@ -11,9 +11,14 @@ import {
   Platform,
   ActivityIndicator,
   Image,
+  Alert,
 } from 'react-native';
 import { Link, router } from 'expo-router';
-import { signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail } from 'firebase/auth';
+import {
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  sendPasswordResetEmail,
+} from 'firebase/auth';
 import NetInfo from '@react-native-community/netinfo';
 import { auth } from '../../firebaseConfig';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -23,13 +28,13 @@ const LogIn: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [forgotMode, setForgotMode] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) router.replace('/Home');
+      if (user && user.emailVerified) router.replace('/Home');
       setCheckingAuth(false);
     });
-
     return () => unsubscribe();
   }, []);
 
@@ -38,32 +43,67 @@ const LogIn: React.FC = () => {
     setErrorMsg('');
   };
 
+  const isValidEmail = (email: string) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email.toLowerCase());
+  };
+
   const handleSubmit = async () => {
     const { email, password } = formData;
+    setErrorMsg('');
 
+    // 1. Check if both fields are filled
     if (!email.trim() || !password.trim()) {
-      setErrorMsg('⚠️ Please enter both email and password.');
+      setErrorMsg('Please enter both email and password.');
       return;
     }
 
+    // 2. Check email format
+    if (!isValidEmail(email.trim())) {
+      setErrorMsg('Invalid email address.');
+      return;
+    }
+
+    // 3. Check internet
     const netState = await NetInfo.fetch();
     if (!netState.isConnected) {
-      setErrorMsg('📡 No internet connection. Please check your network.');
+      setErrorMsg('No internet connection. Please check your network.');
       return;
     }
 
     setLoading(true);
+
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), password);
+      // 4. Attempt login
+      const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
+      const user = userCredential.user;
+
+      // 5. Check email verification
+      if (!user.emailVerified) {
+        await auth.signOut();
+        Alert.alert('Email Not Verified', 'Please verify your email before logging in.');
+        return;
+      }
+
+      // 6. Login successful
       router.replace('/Home');
+
     } catch (error: any) {
-      console.error('Login error:', error.message);
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        setErrorMsg('❌ Invalid email or password.');
+      console.error('Login error:', error);
+
+      // 7. Handle Firebase errors explicitly
+      if (error.code === 'auth/user-not-found') {
+        setErrorMsg('User not found. Please register first.');
+      } else if (error.code === 'auth/wrong-password') {
+        setErrorMsg('Incorrect password. Please try again.');
+      } else if (error.code === 'auth/invalid-email') {
+        setErrorMsg('Invalid email address.');
       } else if (error.code === 'auth/network-request-failed') {
-        setErrorMsg('🌐 Cannot connect to server. Please try again.');
+        setErrorMsg('Cannot connect to server. Check your internet connection.');
+      } else if (error.code === 'auth/too-many-requests') {
+        setErrorMsg('Too many failed attempts. Please try again later.');
       } else {
-        setErrorMsg('⚠️ Something went wrong. Please try again.');
+        setErrorMsg('Something went wrong. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -75,11 +115,19 @@ const LogIn: React.FC = () => {
       setErrorMsg('Please enter your email first.');
       return;
     }
+
+    setLoading(true);
     try {
       await sendPasswordResetEmail(auth, formData.email.trim());
-      setErrorMsg('✅ Password reset email sent.');
+      setErrorMsg('');
+      Alert.alert('Reset Email Sent', 'Please check your inbox.');
+      setForgotMode(false);
+      setFormData({ ...formData, password: '' });
     } catch (err: any) {
-      setErrorMsg('❌ Failed to send reset email.');
+      console.error(err);
+      setErrorMsg('Failed to send reset email. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -99,85 +147,121 @@ const LogIn: React.FC = () => {
       style={{ flex: 1 }}
     >
       <StatusBar barStyle="dark-content" backgroundColor="#E6F2FF" />
-
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
       >
-        <ScrollView
-          contentContainerStyle={styles.container}
-          keyboardShouldPersistTaps="handled"
-        >
-          <Text style={styles.title}>Login</Text>
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          <Text style={styles.title}>{forgotMode ? 'Reset Password' : 'Login'}</Text>
 
           <View style={styles.errorWrapper}>
             <Text style={styles.errorText}>{errorMsg}</Text>
           </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email Address</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your email"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={formData.email}
-              onChangeText={(text) => handleChange('email', text)}
-            />
+          {!forgotMode ? (
+            <>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Email Address</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your email"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={formData.email}
+                  onChangeText={(text) => handleChange('email', text)}
+                />
 
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your password"
-              secureTextEntry
-              value={formData.password}
-              onChangeText={(text) => handleChange('password', text)}
-            />
+                <Text style={styles.label}>Password</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your password"
+                  secureTextEntry
+                  value={formData.password}
+                  onChangeText={(text) => handleChange('password', text)}
+                />
 
-            <TouchableOpacity onPress={handleForgotPassword}>
-              <Text style={styles.forgotText}>Forgot Password?</Text>
-            </TouchableOpacity>
-          </View>
+                <TouchableOpacity
+                  onPress={() => setForgotMode(true)}
+                  style={{ alignSelf: 'flex-end', marginBottom: 10 }}
+                >
+                  <Text style={styles.forgotText}>Forgot Password?</Text>
+                </TouchableOpacity>
+              </View>
 
+              <LinearGradient
+                colors={['#3B7CF5', '#5AD9D5']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.buttonGradient}
+              >
+                <TouchableOpacity
+                  onPress={handleSubmit}
+                  disabled={loading}
+                  activeOpacity={0.8}
+                  style={styles.button}
+                >
+                  <Text style={styles.buttonText}>{loading ? 'Logging in...' : 'Log In'}</Text>
+                </TouchableOpacity>
+              </LinearGradient>
 
-          {/* Log In Button */}
-          <LinearGradient
-            colors={['#3B7CF5', '#5AD9D5']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.buttonGradient}
-          >
-            <TouchableOpacity
-              onPress={handleSubmit}
-              disabled={loading}
-              activeOpacity={0.8}
-              style={styles.button}
-            >
-              <Text style={styles.buttonText}>{loading ? 'Logging in...' : 'Log In'}</Text>
-            </TouchableOpacity>
-          </LinearGradient>
-          
-           <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 25 }}>
-            <Text style={styles.linkText}>If you don&apos;t have an account, please</Text>
-            <Link href="/auth/signup" style={styles.link}>
-              Register.
-            </Link>
-          </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 25, marginBottom: 40, }}>
+                <Text style={styles.linkText}>If you don&apos;t have an account, please</Text>
+                <Link href="/auth/signup" style={styles.link}>
+                  Register.
+                </Link>
+              </View>
 
-          <Text style={{ textAlign: 'center', marginVertical: 20, color: '#555', fontSize: 16, marginTop: 40, }}>or login with</Text>
+              <Text style={{ textAlign: 'center', marginVertical: 20, color: '#555', fontSize: 16, marginBottom: 40, }}>
+                or login with
+              </Text>
 
-          {/* Dummy Google Login */}
-          <TouchableOpacity style={styles.googleButton} activeOpacity={0.8}>
-            <View style={styles.googleContent}>
-              <Image
-                source={require('../../assets/images/google.png')} // Add Google logo here
-                style={styles.googleLogo}
-              />
-              <Text style={styles.googleText}>Login with Google</Text>
-            </View>
-          </TouchableOpacity>
+              {/* Google Login Section */}
+              <TouchableOpacity style={styles.googleButton} activeOpacity={0.8}>
+                <View style={styles.googleContent}>
+                  <Image
+                    source={require('../../assets/images/google.png')}
+                    style={styles.googleLogo}
+                  />
+                  <Text style={styles.googleText}>Login with Google</Text>
+                </View>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Email Address</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your email"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={formData.email}
+                  onChangeText={(text) => handleChange('email', text)}
+                />
 
+                <LinearGradient
+                  colors={['#3B7CF5', '#5AD9D5']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.buttonGradient}
+                >
+                  <TouchableOpacity
+                    onPress={handleForgotPassword}
+                    disabled={loading}
+                    activeOpacity={0.8}
+                    style={styles.button}
+                  >
+                    <Text style={styles.buttonText}>{loading ? 'Sending...' : 'Send Reset Email'}</Text>
+                  </TouchableOpacity>
+                </LinearGradient>
+
+                <TouchableOpacity onPress={() => setForgotMode(false)} style={{ marginTop: 15 }}>
+                  <Text style={[styles.forgotText, { textAlign: 'center' }]}>Back to Login</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </LinearGradient>
@@ -186,29 +270,12 @@ const LogIn: React.FC = () => {
 
 export default LogIn;
 
+// Styles unchanged
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 24,
-    paddingTop: 40,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#3B7CF5',
-    marginBottom: 15,
-  },
-  inputContainer: {
-    marginBottom: 10,
-  },
-  label: {
-    fontSize: 15,
-    color: '#3B7CF5',
-    fontWeight: '600',
-    marginBottom: 6,
-  },
+  container: { flexGrow: 1, justifyContent: 'center', padding: 24, paddingTop: 40 },
+  title: { fontSize: 32, fontWeight: 'bold', textAlign: 'center', color: '#3B7CF5', marginBottom: 15 },
+  inputContainer: { marginBottom: 10 },
+  label: { fontSize: 15, color: '#3B7CF5', fontWeight: '600', marginBottom: 6 },
   input: {
     height: 52,
     borderColor: 'rgba(59,124,245,0.5)',
@@ -224,30 +291,10 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
-  forgotText: {
-    color: '#0059ffff',
-    fontWeight: '600',
-    textAlign: 'right',
-    marginTop: -8,
-    marginBottom: 12,
-    marginRight: 5,
-    fontStyle: 'italic',
-  },
-  buttonGradient: {
-    borderRadius: 25,
-    marginTop: 15,
-    elevation: 3,
-  },
-  button: {
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
+  forgotText: { color: '#3B7CF5', fontWeight: '600', textDecorationLine: 'underline', fontStyle: 'italic' },
+  buttonGradient: { borderRadius: 25, marginTop: 15, elevation: 3 },
+  button: { paddingVertical: 14, alignItems: 'center' },
+  buttonText: { color: '#fff', fontSize: 18, fontWeight: '700', letterSpacing: 0.5 ,},
   googleButton: {
     flexDirection: 'row',
     marginTop: -10,
@@ -261,42 +308,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     shadowRadius: 3,
   },
-  googleContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  googleLogo: {
-    width: 24,
-    height: 24,
-    marginRight: 12,
-  },
-  googleText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#444',
-  },
-  linkText: {
-    fontSize: 16,
-    color: '#444',
-  },
-  link: {
-    fontWeight: 'bold',
-    color: '#3B7CF5',
-    fontSize: 16,
-    marginLeft: 4,
-  },
-  errorWrapper: {
-    minHeight: 22,
-    marginBottom: 8,
-  },
-  errorText: {
-    color: '#b91c1c',
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  googleContent: { flexDirection: 'row', alignItems: 'center' },
+  googleLogo: { width: 24, height: 24, marginRight: 12 },
+  googleText: { fontSize: 16, fontWeight: '600', color: '#444' },
+  linkText: { fontSize: 16, color: '#444' },
+  link: { fontWeight: 'bold', color: '#3B7CF5', fontSize: 16, marginLeft: 4 },
+  errorWrapper: { minHeight: 22, marginBottom: 8 },
+  errorText: { color: '#b91c1c', fontWeight: '600', textAlign: 'center' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 });
