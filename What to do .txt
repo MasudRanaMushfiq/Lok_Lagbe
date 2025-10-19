@@ -1,0 +1,78 @@
+I am building a task-based mobile app using React Native + Expo Router + Firebase Firestore + Firebase Auth.  
+The app flow is like this:
+
+1. Authentication:
+   - Users sign up and log in using Firebase Auth.
+   - Each user has a profile stored in Firestore (name, email, mobile, location, etc.).
+
+2. Posting & Browsing Works:
+   - A user can post a work (task) with details like title, description, price, from-to location, date.
+   - Other users can browse works in a list (with filters for location and category).
+   - Each work card navigates to a details page (`/works/[id]`).
+
+3. Accepting Works:
+   - A user can click "Accept" on a work.
+   - When accepted:
+     - A notification document is created in Firestore for the work poster.
+     - The work’s status is updated (`pending → accepted`).
+
+4. Notifications:
+   - The work poster can open a **Notifications page**.
+   - Each notification shows work info + worker info.
+   - The poster can **Accept** (status → "completed") or **Reject** (status → "rejected").
+
+5. Profile:
+   - Each user can view their profile page.
+   - Profile shows all info (name, email, mobile, etc.).
+   - Buttons: **Edit Profile** (can edit name & mobile), **History** (past works), and **Logout**.
+
+6. Navigation:
+   - Using `expo-router` with `(tabs)` folder for bottom navigation.
+   - Tabs: Home, Works, Profile, Notifications.
+
+7. Firestore Schema:
+   - `users`: { uid, fullName, email, mobile, location }
+   - `works`: { id, userId, title, description, price, from, to, date, status }
+   - `notifications`: { id, workId, toUserId, fromUserId, status }
+
+
+
+
+
+
+
+Here’s a concise prompt summarizing your app, its UI style, and overview:
+
+---
+
+**App Overview:**
+Your app is a **task marketplace platform**, where users can **post tasks**, others can **accept and complete tasks**, and notifications manage task progress. Users can track their **posted, accepted, pending, and completed works**, as well as **complaints**. The app supports **worker-poster interaction** and **status updates** for tasks (accepted, completed\_sent, completed).
+
+**Key Features:**
+
+* Post and manage tasks
+* Accept or give work to others
+* Track pending and completed tasks
+* Notifications for task actions
+* Contact poster/worker for each task
+* Dashboard with task summary and profile rating
+
+**UI Style and Color Palette:**
+
+* **Primary Color:** #3a125d → Buttons, cards, highlights
+* **Secondary Color:** #e89d07 → Action buttons, status indicators
+* **Accent Color:** #1877F2 → Headers, important texts
+* **Background Color:** #f0f2f5 → App background
+* **Text Color:** #4b4f56 / #1c1e21 → General text
+* **Disabled / Minor Text:** #606770
+
+**UI Overview:**
+
+* **Dashboard:** Summary of Posted, Accepted, Pending, Completed, Complaints
+* **Task Cards:** Shows title, description, price, location, status, and action buttons
+* **Notifications:** Details task status updates and allows confirming/rejecting work
+* **Action Buttons:** Distinct color coding (Primary: #3a125d, Action: #e89d07, Confirm: #1877F2, Reject: #d9534f)
+
+---
+
+

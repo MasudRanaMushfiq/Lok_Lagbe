@@ -1,0 +1,156 @@
+Perfect! Since you’ve uploaded all your code files, I can help you **analyze and summarize your app** fully. Here’s a detailed breakdown of your software based on the code you’ve shared so far:
+
+
+## **1. App Name and Platform**
+
+* **App Name (likely):** Lok Lagbe
+* **Platforms:** Android (Expo / React Native), potentially iOS in the future
+* **Framework:** React Native with Expo Router
+
+---
+
+## **2. App Purpose**
+
+* A **task/job marketplace** where:
+
+  * Users can **post tasks/work** they want done.
+  * Other users can **accept or do tasks** in exchange for payment.
+  * Ratings, reviews, and wallet balances are tracked for users.
+* Features include:
+
+  * Posting jobs
+  * Accepting jobs
+  * Ratings & reviews
+  * Wallet and transaction management
+  * Admin panel to manage users (verification, deletion)
+  * Skill/progress tracking of users (accepted/posted works)
+
+---
+
+## **3. Firebase Integration**
+
+You use Firebase services extensively:
+
+1. **Authentication (Firebase Auth)**
+
+   * Sign-in/sign-up
+   * Login persistence using AsyncStorage (for React Native)
+2. **Firestore (Database)**
+
+   * Collections:
+
+     * `users` → user profiles, ratings, accepted/posted works, wallet balance
+     * `worked` → tasks/jobs posted
+     * `notifications` → alerts for work acceptance
+3. **Firebase Storage** (optional)
+
+   * Currently not used; you can skip it if no file uploads.
+4. **Wallet / Transactions**
+
+   * Wallet balance is stored per user in Firestore
+   * Transactions are stored as a subcollection under each user
+
+---
+
+## **4. Core Screens / Components**
+
+Here’s a list of screens/components from your code:
+
+| Screen             | Purpose                 | Key Features                                   |
+| ------------------ | ----------------------- | ---------------------------------------------- |
+| `Index`            | Welcome screen          | Start button navigates to login                |
+| `Login / Register` | Auth screens            | Firebase Auth login/signup                     |
+| `Home / Tabs`      | Main app navigation     | Access to tasks, wallet, profile               |
+| `RatingScreen`     | Rate a user after work  | Submit rating & review, updates Firestore      |
+| `ViewUserScreen`   | View user profile       | Shows rating, works, skill progress            |
+| `WalletScreen`     | Wallet and transactions | Shows balance and transaction list             |
+| `WorkDetails`      | Detailed task view      | Accept work, updates Firestore & notifications |
+| `ShowAllUsers`     | Admin screen            | Lists all users, toggle verified, delete user  |
+
+---
+
+## **5. UI / Design**
+
+* **Colors**:
+
+  * Primary: `#3a125d`
+  * Secondary: `#e89d07`
+  * Background: `#eceefc`
+  * Text: `#544d4d`
+* **Styling**:
+
+  * Rounded buttons & cards
+  * Cards for user/task info
+  * Progress bars for skills
+  * Star ratings displayed visually
+* **Icons**: Uses **Ionicons** for stars, verified, and action icons
+
+---
+
+## **6. Admin Features**
+
+* **Admin UID:** `"yarTXhiAlPdFJQyQhajZNeDaWIC2"` (hardcoded)
+* Admin can:
+
+  * Verify/unverify users
+  * Delete users
+* Non-admin users can only see verified status
+
+---
+
+## **7. Authentication & Persistence**
+
+* Firebase Auth initialized with **AsyncStorage persistence**:
+
+  ```ts
+  import { initializeAuth, getReactNativePersistence } from "firebase/auth";
+  import AsyncStorage from "@react-native-async-storage/async-storage";
+  ```
+* CurrentUser state is used in all screens to check login
+* Persistent login works as long as Firebase Auth is correctly initialized
+
+---
+
+## **8. Data Handling**
+
+* Firestore is queried in **every screen** where user or task data is needed
+* Real-time updates **not implemented** (all fetches are one-time `getDoc` / `getDocs`)
+* Ratings and reviews use `arrayUnion` to append new reviews
+* Wallet updates reflect in `users` subcollection
+
+---
+
+## **9. Navigation**
+
+* **Expo Router** is used:
+
+  * `/auth/login`
+  * `/home/(tabs)`
+* Programmatic navigation via `router.push` or `router.replace`
+* Route params used to pass IDs (e.g., `ratedUserId`, `workId`, `id`)
+
+---
+
+## **10. Possible Issues / Notes**
+
+* Some features like Firebase Storage and notifications need full testing
+* Admin UID is hardcoded → consider moving to Firestore-based role system
+* Ratings and works update logic seems fine, but concurrency may need attention if multiple users rate/accept simultaneously
+* No offline persistence for Firestore data (only login is persistent)
+
+---
+
+## **11. App Flow Summary**
+
+1. User opens app → sees welcome screen → navigates to login
+2. After login, user accesses tabs:
+
+   * Browse jobs → see details → accept work
+   * Complete work → rate user
+   * Wallet → view balance & transactions
+3. Admins can access all users → verify or delete users
+4. Ratings, accepted/posted works, and skills are tracked
+5. Notifications are stored in Firestore (no push yet)
+
+---
+
