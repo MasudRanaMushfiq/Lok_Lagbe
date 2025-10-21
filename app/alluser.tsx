@@ -48,7 +48,6 @@ export default function ShowAllUsers() {
   const [loading, setLoading] = useState(true);
   const auth = getAuth();
   const currentUser = auth.currentUser;
-  const ADMIN_UID = "yarTXhiAlPdFJQyQhajZNeDaWIC2";
 
   useEffect(() => {
     fetchUsersAndStats();
@@ -165,41 +164,23 @@ export default function ShowAllUsers() {
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Text style={styles.name}>{item.fullName || "No Name"}</Text>
 
-            {currentUser?.uid === ADMIN_UID && (
-              <TouchableOpacity
-                onPress={() => toggleVerified(item.id, item.verified ?? false)}
+            {/* Toggle verified for every user */}
+            <TouchableOpacity
+              onPress={() => toggleVerified(item.id, item.verified ?? false)}
+              style={[
+                styles.toggleRect,
+                item.verified ? styles.verifiedOn : styles.verifiedOff,
+              ]}
+            >
+              <Text
                 style={[
-                  styles.toggleRect,
-                  item.verified ? styles.verifiedOn : styles.verifiedOff,
+                  styles.toggleText,
+                  item.verified ? styles.textOn : styles.textOff,
                 ]}
               >
-                <Text
-                  style={[
-                    styles.toggleText,
-                    item.verified ? styles.textOn : styles.textOff,
-                  ]}
-                >
-                  {item.verified ? "Verified" : "Not Verified"}
-                </Text>
-              </TouchableOpacity>
-            )}
-
-            {currentUser?.uid !== ADMIN_UID &&
-              (item.verified ? (
-                <Ionicons
-                  name="checkmark-circle"
-                  size={20}
-                  color="#4caf50"
-                  style={{ marginLeft: 8 }}
-                />
-              ) : (
-                <Ionicons
-                  name="close-circle"
-                  size={20}
-                  color="#e53935"
-                  style={{ marginLeft: 8 }}
-                />
-              ))}
+                {item.verified ? "Verified" : "Not Verified"}
+              </Text>
+            </TouchableOpacity>
           </View>
 
           <Text style={styles.email}>{item.email || "No Email"}</Text>
@@ -213,14 +194,13 @@ export default function ShowAllUsers() {
             </Text>
           </View>
 
-          {currentUser?.uid === ADMIN_UID && (
-            <TouchableOpacity
-              style={styles.deleteBtn}
-              onPress={() => deleteUser(item.id)}
-            >
-              <Ionicons name="trash" size={18} color="#e63946" />
-            </TouchableOpacity>
-          )}
+          {/* Delete user button */}
+          <TouchableOpacity
+            style={styles.deleteBtn}
+            onPress={() => deleteUser(item.id)}
+          >
+            <Ionicons name="trash" size={18} color="#e63946" />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.statsSection}>
@@ -298,7 +278,7 @@ const styles = StyleSheet.create({
   gradientCard: {
     borderRadius: 12,
     marginBottom: 14,
-    padding: 2, // thickness of gradient border
+    padding: 2,
   },
   userCard: {
     backgroundColor: "#fff",

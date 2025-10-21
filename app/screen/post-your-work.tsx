@@ -36,9 +36,10 @@ export default function PostWorkScreen() {
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [location, setLocation] = useState('');
-  const [category, setCategory] = useState(''); 
-  const [startDate, setStartDate] = useState(new Date());
-  const [endDate, setEndDate] = useState(new Date());
+  const [category, setCategory] = useState('');
+
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -68,7 +69,7 @@ export default function PostWorkScreen() {
       Alert.alert('Verification Required', 'You need to be a verified user to post work.');
       return;
     }
-    if (!jobTitle.trim() || !description.trim() || !price.trim() || !location.trim() || !category) {
+    if (!jobTitle.trim() || !description.trim() || !price.trim() || !location.trim() || !category || !startDate || !endDate) {
       Alert.alert('Error', 'Please fill in all required fields.');
       return;
     }
@@ -116,11 +117,16 @@ export default function PostWorkScreen() {
     }
   };
 
+  const formatDate = (date: Date | null) => {
+    if (!date) return 'Select Date';
+    return date.toLocaleDateString();
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#E6F2FF' }}>
       <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
 
-      {/* Gradient Header with Safe Area padding */}
+      {/* Gradient Header */}
       <LinearGradient
         colors={['#3B7CF5', '#5AD9D5']}
         start={{ x: 0, y: 0 }}
@@ -171,15 +177,15 @@ export default function PostWorkScreen() {
           style={styles.input}
         />
 
-        <TouchableOpacity
-          style={styles.input}
-          onPress={() => setShowStartDatePicker(true)}
-        >
-          <Text style={styles.dateText}>Select Start Date</Text>
+        {/* Start Date */}
+        <TouchableOpacity style={styles.input} onPress={() => setShowStartDatePicker(true)}>
+          <Text style={[styles.dateText, { color: startDate ? '#122f5dff' : '#544d4d' }]}>
+            {startDate ? `Start: ${formatDate(startDate)}` : 'Select Start Date'}
+          </Text>
         </TouchableOpacity>
         {showStartDatePicker && (
           <DateTimePicker
-            value={startDate}
+            value={startDate || new Date()}
             mode="date"
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             onChange={(event, selectedDate) => {
@@ -190,22 +196,22 @@ export default function PostWorkScreen() {
           />
         )}
 
-        <TouchableOpacity
-          style={styles.input}
-          onPress={() => setShowEndDatePicker(true)}
-        >
-          <Text style={styles.dateText}>Select End Date</Text>
+        {/* End Date */}
+        <TouchableOpacity style={styles.input} onPress={() => setShowEndDatePicker(true)}>
+          <Text style={[styles.dateText, { color: endDate ? '#122f5dff' : '#544d4d' }]}>
+            {endDate ? `End: ${formatDate(endDate)}` : 'Select End Date'}
+          </Text>
         </TouchableOpacity>
         {showEndDatePicker && (
           <DateTimePicker
-            value={endDate}
+            value={endDate || new Date()}
             mode="date"
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             onChange={(event, selectedDate) => {
               setShowEndDatePicker(false);
               if (selectedDate) setEndDate(selectedDate);
             }}
-            minimumDate={startDate}
+            minimumDate={startDate || new Date()}
           />
         )}
 
@@ -224,20 +230,15 @@ export default function PostWorkScreen() {
           </Picker>
         </View>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handlePostWork}
-          disabled={uploading}
-        >
+        {/* Submit Button */}
+        <TouchableOpacity style={styles.button} onPress={handlePostWork} disabled={uploading}>
           <LinearGradient
             colors={['#3B7CF5', '#5AD9D5']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.buttonGradient}
           >
-            <Text style={styles.buttonText}>
-              {uploading ? 'Posting...' : 'Post Work'}
-            </Text>
+            <Text style={styles.buttonText}>{uploading ? 'Posting...' : 'Post Work'}</Text>
           </LinearGradient>
         </TouchableOpacity>
       </ScrollView>

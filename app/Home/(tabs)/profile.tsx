@@ -21,12 +21,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 const ProfileScreen = () => {
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false); // ✅ dynamic admin check
 
   const auth = getAuth();
   const currentUser = auth.currentUser;
   const router = useRouter();
-
-  const ADMIN_UID = "yarTXhiAlPdFJQyQhajZNeDaWIC2";
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -35,8 +34,14 @@ const ProfileScreen = () => {
           router.replace('/auth/login');
           return;
         }
+
+        // Fetch user info
         const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
         if (userDoc.exists()) setUserData(userDoc.data());
+
+        // ✅ Check if user is admin from Firestore
+        const adminDoc = await getDoc(doc(db, 'admins', currentUser.uid));
+        setIsAdmin(adminDoc.exists());
       } catch (error) {
         console.error('Error fetching user data:', error);
         Alert.alert('Error', 'Failed to load profile data');
@@ -44,6 +49,7 @@ const ProfileScreen = () => {
         setLoading(false);
       }
     };
+
     fetchUserData();
   }, [currentUser]);
 
@@ -111,7 +117,7 @@ const ProfileScreen = () => {
           </TouchableOpacity>
         </LinearGradient>
 
-        {/* Info Card with Gradient Border */}
+        {/* Info Card */}
         <LinearGradient
           colors={['#3B7CF5', '#5AD9D5']}
           style={styles.infoCardGradient}
@@ -152,7 +158,7 @@ const ProfileScreen = () => {
           </View>
         </LinearGradient>
 
-        {/* Buttons Row */}
+        {/* Buttons */}
         <View style={styles.buttonsRow}>
           <TouchableOpacity
             style={styles.outlineButton}
@@ -169,8 +175,8 @@ const ProfileScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Admin + Contact Buttons Row */}
-        {currentUser?.uid === ADMIN_UID ? (
+        {/* ✅ Dynamic Admin Button Section */}
+        {isAdmin ? (
           <View style={[styles.buttonsRow, { marginTop: 0 }]}>
             <LinearGradient
               colors={['#3B7CF5', '#5AD9D5']}
@@ -201,7 +207,6 @@ const ProfileScreen = () => {
             </LinearGradient>
           </View>
         ) : (
-          // Non-admin users see only the Contact button
           <LinearGradient
             colors={['#3B7CF5', '#5AD9D5']}
             start={{ x: 0, y: 0 }}
@@ -231,41 +236,31 @@ const InfoRow = ({ label, value }: { label: string, value: any }) => (
 const styles = StyleSheet.create({
   container: { flexGrow: 1, padding: 16, alignItems: 'center', backgroundColor: '#E6F2FF' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#E6F2FF' },
-
   header: { width: '100%', paddingVertical: 20, alignItems: 'center', borderBottomLeftRadius: 18, borderBottomRightRadius: 18 },
   headerTitle: { color: '#fff', fontSize: 22, fontWeight: '700' },
-
   profileSection: { flexDirection: 'row', alignItems: 'center', marginBottom: -8, width: '100%' },
   profileText: { marginLeft: 16, flex: 1 },
   userName: { color: '#3a125d', fontSize: 22, fontWeight: '700', marginBottom: 4 },
   userBio: { color: '#544d4d', fontSize: 16, flexWrap: 'wrap' },
-
   editButton: { borderRadius: 24, marginVertical: 12, width: '60%', paddingVertical: 12 },
   editButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-
   contactButton: { borderRadius: 24, paddingVertical: 12 },
   contactButtonText: { color: '#fff', fontSize: 18, fontWeight: '600' },
-
   infoCardGradient: { borderRadius: 20, marginBottom: 20, marginTop: 30, width: '95%', padding: 2 },
   infoCard: { backgroundColor: '#fff', borderRadius: 18, padding: 16 },
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center' },
   infoLabel: { fontWeight: '600', fontSize: 16, color: '#3a125d' },
   infoValue: { fontSize: 16, color: '#544d4d' },
-
   ratingContainer: { flexDirection: 'row', alignItems: 'center' },
   ratingText: { marginLeft: 6, fontWeight: '600', fontSize: 16, color: '#544d4d' },
-
   verifiedGradient: { borderRadius: 16, paddingHorizontal: 10, paddingVertical: 4 },
   verifiedContainer: { flexDirection: 'row', alignItems: 'center' },
   verifiedText: { marginLeft: 6, fontWeight: '600', fontSize: 14, color: '#fff' },
-
   buttonsRow: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginVertical: 20 },
   outlineButton: { flex: 1, borderWidth: 1, borderColor: '#3B7CF5', paddingVertical: 12, borderRadius: 24, alignItems: 'center', marginHorizontal: 6 },
   outlineButtonText: { color: '#3B7CF5', fontSize: 16, fontWeight: '600' },
-
   logoutButton: { flex: 1, backgroundColor: '#ffebee', borderWidth: 1, borderColor: '#ed4956', borderRadius: 24, alignItems: 'center', paddingVertical: 12, marginHorizontal: 6 },
   logoutButtonText: { color: '#ed4956', fontSize: 16, fontWeight: '600' },
-
   adminButton: { paddingVertical: 14, borderRadius: 24, alignItems: 'center' },
   adminButtonText: { color: '#fff', fontSize: 18, fontWeight: '700' },
 });

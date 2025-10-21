@@ -52,19 +52,16 @@ const LogIn: React.FC = () => {
     const { email, password } = formData;
     setErrorMsg('');
 
-    // 1. Check if both fields are filled
     if (!email.trim() || !password.trim()) {
       setErrorMsg('Please enter both email and password.');
       return;
     }
 
-    // 2. Check email format
     if (!isValidEmail(email.trim())) {
       setErrorMsg('Invalid email address.');
       return;
     }
 
-    // 3. Check internet
     const netState = await NetInfo.fetch();
     if (!netState.isConnected) {
       setErrorMsg('No internet connection. Please check your network.');
@@ -74,24 +71,19 @@ const LogIn: React.FC = () => {
     setLoading(true);
 
     try {
-      // 4. Attempt login
       const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
       const user = userCredential.user;
 
-      // 5. Check email verification
       if (!user.emailVerified) {
         await auth.signOut();
         Alert.alert('Email Not Verified', 'Please verify your email before logging in.');
         return;
       }
 
-      // 6. Login successful
       router.replace('/Home');
-
     } catch (error: any) {
       console.error('Login error:', error);
 
-      // 7. Handle Firebase errors explicitly
       if (error.code === 'auth/user-not-found') {
         setErrorMsg('User not found. Please register first.');
       } else if (error.code === 'auth/wrong-password') {
@@ -185,7 +177,7 @@ const LogIn: React.FC = () => {
                   onPress={() => setForgotMode(true)}
                   style={{ alignSelf: 'flex-end', marginBottom: 10 }}
                 >
-                  <Text style={styles.forgotText}>Forgot Password?</Text>
+                  <Text style={styles.forgotText}>Forgot Password? </Text>
                 </TouchableOpacity>
               </View>
 
@@ -205,19 +197,34 @@ const LogIn: React.FC = () => {
                 </TouchableOpacity>
               </LinearGradient>
 
-              <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 25, marginBottom: 40, }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  marginTop: 25,
+                  marginBottom: 40,
+                }}
+              >
                 <Text style={styles.linkText}>If you don&apos;t have an account, please</Text>
                 <Link href="/auth/signup" style={styles.link}>
                   Register.
                 </Link>
               </View>
 
-              <Text style={{ textAlign: 'center', marginVertical: 20, color: '#555', fontSize: 16, marginBottom: 40, }}>
+              {/* <Text
+                style={{
+                  textAlign: 'center',
+                  marginVertical: 20,
+                  color: '#555',
+                  fontSize: 16,
+                  marginBottom: 40,
+                }}
+              >
                 or login with
-              </Text>
+              </Text> */}
 
               {/* Google Login Section */}
-              <TouchableOpacity style={styles.googleButton} activeOpacity={0.8}>
+              {/* <TouchableOpacity style={styles.googleButton} activeOpacity={0.8}>
                 <View style={styles.googleContent}>
                   <Image
                     source={require('../../assets/images/google.png')}
@@ -225,7 +232,7 @@ const LogIn: React.FC = () => {
                   />
                   <Text style={styles.googleText}>Login with Google</Text>
                 </View>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </>
           ) : (
             <>
@@ -252,7 +259,9 @@ const LogIn: React.FC = () => {
                     activeOpacity={0.8}
                     style={styles.button}
                   >
-                    <Text style={styles.buttonText}>{loading ? 'Sending...' : 'Send Reset Email'}</Text>
+                    <Text style={styles.buttonText}>
+                      {loading ? 'Sending...' : 'Send Reset Email'}
+                    </Text>
                   </TouchableOpacity>
                 </LinearGradient>
 
@@ -270,10 +279,16 @@ const LogIn: React.FC = () => {
 
 export default LogIn;
 
-// Styles unchanged
+// ===== STYLES =====
 const styles = StyleSheet.create({
   container: { flexGrow: 1, justifyContent: 'center', padding: 24, paddingTop: 40 },
-  title: { fontSize: 32, fontWeight: 'bold', textAlign: 'center', color: '#3B7CF5', marginBottom: 15 },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#3B7CF5',
+    marginBottom: 15,
+  },
   inputContainer: { marginBottom: 10 },
   label: { fontSize: 15, color: '#3B7CF5', fontWeight: '600', marginBottom: 6 },
   input: {
@@ -286,15 +301,30 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     color: '#333',
     fontSize: 15,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    // added shadow
+    shadowColor: '#3B7CF540',
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
   },
-  forgotText: { color: '#3B7CF5', fontWeight: '600', textDecorationLine: 'underline', fontStyle: 'italic' },
-  buttonGradient: { borderRadius: 25, marginTop: 15, elevation: 3 },
+  forgotText: {
+    color: '#3B7CF5',
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+    fontStyle: 'italic',
+  },
+  buttonGradient: {
+    borderRadius: 25,
+    marginTop: 15,
+    elevation: 5,
+    shadowColor: '#3B7CF540',
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+  },
   button: { paddingVertical: 14, alignItems: 'center' },
-  buttonText: { color: '#fff', fontSize: 18, fontWeight: '700', letterSpacing: 0.5 ,},
+  buttonText: { color: '#fff', fontSize: 18, fontWeight: '700', letterSpacing: 0.5 },
   googleButton: {
     flexDirection: 'row',
     marginTop: -10,
@@ -306,7 +336,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#fff',
-    shadowRadius: 3,
+    shadowColor: '#3B7CF540',
+    shadowOpacity: 0.4,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
   },
   googleContent: { flexDirection: 'row', alignItems: 'center' },
   googleLogo: { width: 24, height: 24, marginRight: 12 },

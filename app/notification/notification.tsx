@@ -114,36 +114,13 @@ export default function NotificationsScreen() {
     );
   };
 
-  if (loading) {
-    return (
-      <View style={[styles.centered, styles.background]}>
-        <ActivityIndicator size="large" color="#3B7CF5" />
-      </View>
-    );
-  }
-
-  if (!currentUser) {
-    return (
-      <View style={[styles.centered, styles.background]}>
-        <Text style={styles.infoText}>Please log in to view notifications.</Text>
-      </View>
-    );
-  }
-
-  if (notifications.length === 0) {
-    return (
-      <View style={[styles.centered, styles.background]}>
-        <Text style={styles.infoText}>No notifications found.</Text>
-      </View>
-    );
-  }
-
+  // Always show header regardless of loading or empty notifications
   return (
     <View style={styles.background}>
       {/* StatusBar */}
       <StatusBar backgroundColor="#4A8FF0" barStyle="light-content" />
 
-      {/* Gradient Header with status bar padding */}
+      {/* Gradient Header */}
       <LinearGradient
         colors={['#4A8FF0', '#65D4C9']}
         start={{ x: 0, y: 0 }}
@@ -159,13 +136,28 @@ export default function NotificationsScreen() {
         <Text style={styles.headerTitle}>Notifications</Text>
       </LinearGradient>
 
-      <FlatList
-        data={notifications}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}
-      />
+      {/* Main Content */}
+      {loading ? (
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#3B7CF5" />
+        </View>
+      ) : !currentUser ? (
+        <View style={styles.centered}>
+          <Text style={styles.infoText}>Please log in to view notifications.</Text>
+        </View>
+      ) : notifications.length === 0 ? (
+        <View style={styles.centered}>
+          <Text style={styles.infoText}>No notifications found.</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={notifications}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </View>
   );
 }
