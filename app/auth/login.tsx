@@ -10,7 +10,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Image,
   Alert,
 } from 'react-native';
 import { Link, router } from 'expo-router';
@@ -84,9 +83,7 @@ const LogIn: React.FC = () => {
     } catch (error: any) {
       console.error('Login error:', error);
 
-      if (error.code === 'auth/user-not-found') {
-        setErrorMsg('User not found. Please register first.');
-      } else if (error.code === 'auth/wrong-password') {
+      if (error.code === 'auth/wrong-password') {
         setErrorMsg('Incorrect password. Please try again.');
       } else if (error.code === 'auth/invalid-email') {
         setErrorMsg('Invalid email address.');
