@@ -1,11 +1,23 @@
+// app/_layout.tsx or TabLayout.tsx
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets, SafeAreaProvider } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
   return (
+    <SafeAreaProvider>
+      <InnerTabs />
+    </SafeAreaProvider>
+  );
+}
+
+function InnerTabs() {
+  const insets = useSafeAreaInsets();
+
+  return (
     <Tabs
       screenOptions={({ route }) => ({
-        headerShown: false, // hide header inside tabs screens
+        headerShown: false,
         tabBarIcon: ({ color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap;
 
@@ -22,16 +34,19 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: '#fff',
           borderTopColor: '#eee',
-          height: 60, // optional: increase height slightly
-          paddingBottom: 5, // reduce bottom padding
+          height: 60 + insets.bottom, // account for bottom inset
+          paddingBottom: 5 + insets.bottom,
           paddingTop: 5,
         },
         tabBarIconStyle: {
-          marginTop: -4, // move icon a little up
+          marginTop: -4,
         },
         tabBarLabelStyle: {
-          marginBottom: 2, // adjust label position
+          marginBottom: 2,
           fontSize: 12,
+        },
+        tabBarItemStyle: {
+          paddingBottom: insets.bottom / 2, // optional extra safe spacing
         },
       })}
     />

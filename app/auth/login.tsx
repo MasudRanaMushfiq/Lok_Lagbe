@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,6 @@ import {
 import { Link, router } from 'expo-router';
 import {
   signInWithEmailAndPassword,
-  onAuthStateChanged,
   sendPasswordResetEmail,
 } from 'firebase/auth';
 import NetInfo from '@react-native-community/netinfo';
@@ -26,16 +25,7 @@ const LogIn: React.FC = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
   const [forgotMode, setForgotMode] = useState(false);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user && user.emailVerified) router.replace('/Home');
-      setCheckingAuth(false);
-    });
-    return () => unsubscribe();
-  }, []);
 
   const handleChange = (key: keyof typeof formData, value: string) => {
     setFormData({ ...formData, [key]: value });
@@ -91,6 +81,8 @@ const LogIn: React.FC = () => {
         setErrorMsg('Cannot connect to server. Check your internet connection.');
       } else if (error.code === 'auth/too-many-requests') {
         setErrorMsg('Too many failed attempts. Please try again later.');
+      } else if (error.code === 'auth/user-not-found') {
+        setErrorMsg('No user found with this email.');
       } else {
         setErrorMsg('Something went wrong. Please try again.');
       }
@@ -120,14 +112,6 @@ const LogIn: React.FC = () => {
     }
   };
 
-  if (checkingAuth) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3B7CF5" />
-      </View>
-    );
-  }
-
   return (
     <LinearGradient
       colors={['#E6F2FF', '#ffffff']}
@@ -155,6 +139,7 @@ const LogIn: React.FC = () => {
                 <TextInput
                   style={styles.input}
                   placeholder="Enter your email"
+                  placeholderTextColor="#8b8686"
                   keyboardType="email-address"
                   autoCapitalize="none"
                   value={formData.email}
@@ -165,6 +150,7 @@ const LogIn: React.FC = () => {
                 <TextInput
                   style={styles.input}
                   placeholder="Enter your password"
+                  placeholderTextColor="#8b8686"
                   secureTextEntry
                   value={formData.password}
                   onChangeText={(text) => handleChange('password', text)}
@@ -174,7 +160,7 @@ const LogIn: React.FC = () => {
                   onPress={() => setForgotMode(true)}
                   style={{ alignSelf: 'flex-end', marginBottom: 10 }}
                 >
-                  <Text style={styles.forgotText}>Forgot Password? </Text>
+                  <Text style={styles.forgotText}>Forgot Password?</Text>
                 </TouchableOpacity>
               </View>
 
@@ -190,7 +176,11 @@ const LogIn: React.FC = () => {
                   activeOpacity={0.8}
                   style={styles.button}
                 >
-                  <Text style={styles.buttonText}>{loading ? 'Logging in...' : 'Log In'}</Text>
+                  {loading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.buttonText}>Log In</Text>
+                  )}
                 </TouchableOpacity>
               </LinearGradient>
 
@@ -207,29 +197,6 @@ const LogIn: React.FC = () => {
                   Register.
                 </Link>
               </View>
-
-              {/* <Text
-                style={{
-                  textAlign: 'center',
-                  marginVertical: 20,
-                  color: '#555',
-                  fontSize: 16,
-                  marginBottom: 40,
-                }}
-              >
-                or login with
-              </Text> */}
-
-              {/* Google Login Section */}
-              {/* <TouchableOpacity style={styles.googleButton} activeOpacity={0.8}>
-                <View style={styles.googleContent}>
-                  <Image
-                    source={require('../../assets/images/google.png')}
-                    style={styles.googleLogo}
-                  />
-                  <Text style={styles.googleText}>Login with Google</Text>
-                </View>
-              </TouchableOpacity> */}
             </>
           ) : (
             <>
@@ -238,6 +205,7 @@ const LogIn: React.FC = () => {
                 <TextInput
                   style={styles.input}
                   placeholder="Enter your email"
+                  placeholderTextColor="#8b8686"
                   keyboardType="email-address"
                   autoCapitalize="none"
                   value={formData.email}
@@ -256,9 +224,11 @@ const LogIn: React.FC = () => {
                     activeOpacity={0.8}
                     style={styles.button}
                   >
-                    <Text style={styles.buttonText}>
-                      {loading ? 'Sending...' : 'Send Reset Email'}
-                    </Text>
+                    {loading ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={styles.buttonText}>Send Reset Email</Text>
+                    )}
                   </TouchableOpacity>
                 </LinearGradient>
 
@@ -276,7 +246,6 @@ const LogIn: React.FC = () => {
 
 export default LogIn;
 
-// ===== STYLES =====
 const styles = StyleSheet.create({
   container: { flexGrow: 1, justifyContent: 'center', padding: 24, paddingTop: 40 },
   title: {
@@ -298,7 +267,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     color: '#333',
     fontSize: 15,
-    // added shadow
     shadowColor: '#3B7CF540',
     shadowOpacity: 0.3,
     shadowRadius: 6,
@@ -322,29 +290,8 @@ const styles = StyleSheet.create({
   },
   button: { paddingVertical: 14, alignItems: 'center' },
   buttonText: { color: '#fff', fontSize: 18, fontWeight: '700', letterSpacing: 0.5 },
-  googleButton: {
-    flexDirection: 'row',
-    marginTop: -10,
-    borderWidth: 2,
-    borderColor: '#dadadaff',
-    borderRadius: 50,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-    shadowColor: '#3B7CF540',
-    shadowOpacity: 0.4,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 4,
-  },
-  googleContent: { flexDirection: 'row', alignItems: 'center' },
-  googleLogo: { width: 24, height: 24, marginRight: 12 },
-  googleText: { fontSize: 16, fontWeight: '600', color: '#444' },
   linkText: { fontSize: 16, color: '#444' },
   link: { fontWeight: 'bold', color: '#3B7CF5', fontSize: 16, marginLeft: 4 },
   errorWrapper: { minHeight: 22, marginBottom: 8 },
   errorText: { color: '#b91c1c', fontWeight: '600', textAlign: 'center' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 });

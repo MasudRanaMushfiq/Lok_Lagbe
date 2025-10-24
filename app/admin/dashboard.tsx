@@ -51,7 +51,8 @@ export default function AdminDashboard() {
         );
         const completedPosts = completedSnap.size;
 
-        const complaintsSnap = await getDocs(collection(db, "notifications"));
+        // Fetch complaints from the 'complains' collection instead of notifications
+        const complaintsSnap = await getDocs(collection(db, "complains"));
         const totalComplaints = complaintsSnap.size;
 
         setStats({
@@ -86,14 +87,13 @@ export default function AdminDashboard() {
     { key: "active", icon: "checkmark-circle", value: stats.approvedPosts, label: "Active Post", colors: ["#3B7CF5", "#65D4C9"], route: "/screen/activepost" },
     { key: "accepted", icon: "time", value: stats.pendingPosts, label: "Pending", colors: ["#65D4C9", "#3B7CF5"], route: "/screen/pendingpost" },
     { key: "completed", icon: "checkmark-done", value: stats.completedPosts, label: "Completed", colors: ["#3B7CF5", "#4AB8F0"], route: "/screen/completedpost" },
-    { key: "complaints", icon: "alert-circle", value: stats.totalComplaints, label: "Complaints", colors: ["#F45A5A", "#FF7F7F"], route: "/screen/pendingpost" },
+    { key: "complaints", icon: "alert-circle", value: stats.totalComplaints, label: "Complaints", colors: ["#F45A5A", "#FF7F7F"], route: "/screen/showcomplain" },
   ];
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
 
-      {/* ✅ Header Fix */}
       <LinearGradient
         colors={["#4A8FF0", "#65D4C9"]}
         start={{ x: 0, y: 0 }}
@@ -171,7 +171,6 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 18,
     elevation: 4,
   },
-  // ✅ Back + Title in same line, centered vertically
   headerRow: {
     flexDirection: "row",
     alignItems: "center",

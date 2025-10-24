@@ -9,7 +9,6 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from 'react-native';
 import { Link, router } from 'expo-router';
 import {
@@ -272,3 +271,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
+
+

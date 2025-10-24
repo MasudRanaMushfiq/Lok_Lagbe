@@ -104,7 +104,7 @@ export default function HireScreen() {
 
         <View style={styles.headerContent}>
 
-          <Text style={styles.headerTitle}>Hire for Work</Text>
+          <Text style={styles.headerTitle}>Book for Agency Services</Text>
         </View>
       </LinearGradient>
 
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 20,
     fontWeight: '700',
-    marginLeft: 100,
+    marginLeft: 60,
   },
 
   container: {

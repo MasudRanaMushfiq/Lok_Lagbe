@@ -92,6 +92,11 @@ export default function WorkDetails() {
       return;
     }
 
+    if (workData.userId === currentUser.uid) {
+      Alert.alert('Cannot Apply', 'You cannot apply for your own work.');
+      return;
+    }
+
     if (workData?.status !== 'active') {
       Alert.alert('Unavailable', 'This work is not available for acceptance.');
       return;
@@ -178,20 +183,14 @@ export default function WorkDetails() {
       </LinearGradient>
 
       <ScrollView contentContainerStyle={styles.container}>
-        <LinearGradient
-          colors={['#3B7CF5', '#5AD9D5']}
-          style={styles.cardGradient}
-        >
+        <LinearGradient colors={['#3B7CF5', '#5AD9D5']} style={styles.cardGradient}>
           <View style={styles.card}>
             <Text style={styles.title}>{workData?.jobTitle || 'Untitled Work'}</Text>
             <Text style={styles.postedBy}>
               Posted by: <Text style={styles.postedByName}>{posterName}</Text>
             </Text>
 
-            <LinearGradient
-              colors={['#E0F7FA', '#B2EBF2']}
-              style={styles.miniCard}
-            >
+            <LinearGradient colors={['#E0F7FA', '#B2EBF2']} style={styles.miniCard}>
               <View style={styles.row}>
                 <View style={styles.infoBox}>
                   <Text style={styles.infoLabel}>Start Date</Text>
@@ -237,20 +236,20 @@ export default function WorkDetails() {
                   style={{ width: '100%', alignItems: 'center' }}
                 >
                   <Text style={styles.acceptButtonText}>
-                    {accepting ? 'Accepting...' : 'Do Work'}
+                    {accepting ? 'Accepting...' : 'Apply For Work'}
                   </Text>
                 </TouchableOpacity>
               </LinearGradient>
             ) : (
               <LinearGradient
-                colors={['#F44336', '#ff8c98ff']}
+                colors={['#636060', '#636060']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                style={styles.statusContainer}
+                style={[styles.acceptButton, { opacity: 0.7 }]}
               >
-                <Text style={styles.statusText}>
-                  Status: {workData?.status?.toUpperCase() || 'UNKNOWN'}
-                </Text>
+                <TouchableOpacity disabled style={{ width: '100%', alignItems: 'center' }}>
+                  <Text style={styles.acceptButtonText}>Work Not Available</Text>
+                </TouchableOpacity>
               </LinearGradient>
             )}
           </View>
@@ -320,12 +319,4 @@ const styles = StyleSheet.create({
   },
   disabledButton: { opacity: 0.6 },
   acceptButtonText: { color: '#fff', fontWeight: '700', fontSize: 20 },
-
-  statusContainer: {
-    marginTop: 10,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderRadius: 8,
-  },
-  statusText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
 });

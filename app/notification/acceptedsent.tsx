@@ -109,7 +109,7 @@ export default function AcceptNotification() {
       if (id) await updateDoc(doc(db, 'notifications', id), { read: true });
 
       await addDoc(collection(db, 'notifications'), {
-        message: `You have been granted the work: ${work.jobTitle}`,
+        message: `You have been granted the work: "${work.jobTitle}", Do the work now.`,
         type: 'accepted',
         workId: workId,
         fromUserId: ownerUID || '',
@@ -128,11 +128,23 @@ export default function AcceptNotification() {
   };
 
   const rejectUser = async () => {
-    if (!workId) return;
+    if (!workId || !acceptedUID) return;
     setLoading(true);
     try {
       await updateDoc(doc(db, 'worked', workId), { status: 'active', acceptedBy: null });
-      Alert.alert('User rejected.');
+
+      // 🔹 New: send notification to rejected user
+      await addDoc(collection(db, 'notifications'), {
+        message: `Your application for "${work.jobTitle}" has been rejected.`,
+        type: 'rejected',
+        workId: workId,
+        fromUserId: ownerUID || '',
+        toUserId: acceptedUID,
+        createdAt: serverTimestamp(),
+        read: false,
+      });
+
+      Alert.alert('User rejected and notified.');
       router.push('/Home');
     } catch (err: any) {
       Alert.alert('Error', err.message);
@@ -286,7 +298,7 @@ const styles = StyleSheet.create({
   acceptedCard: { padding: 16, borderRadius: 16, marginBottom: 16 },
   acceptedLabel: { fontSize: 14, fontWeight: '600', color: '#0D1F3C', marginBottom: 6 },
   acceptedContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  acceptedName: { fontWeight: '800', fontSize: 18, marginLeft: 6, color: '#fff' },
+  acceptedName: { fontWeight: '800', fontSize: 18, marginLeft: 6, color: '#0803ffff' },
 
   viewUserBorder: { borderRadius: 12, padding: 2 },
   viewUserBtnSolid: { backgroundColor: '#fff', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 10 },

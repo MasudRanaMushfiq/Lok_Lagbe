@@ -40,13 +40,22 @@ export default function WorksScreen() {
       if (!refreshing) setLoading(true);
 
       const querySnapshot = await getDocs(collection(db, 'worked'));
-      const worksList: any[] = [];
+      let worksList: any[] = [];
       const userIdSet = new Set<string>();
 
       querySnapshot.forEach((docSnap) => {
         const data = docSnap.data();
-        worksList.push({ id: docSnap.id, ...data });
-        if (data.userId) userIdSet.add(data.userId);
+        if (data.status === 'active') { // 🔹 Only active works
+          worksList.push({ id: docSnap.id, ...data });
+          if (data.userId) userIdSet.add(data.userId);
+        }
+      });
+
+      // 🔹 Sort by latest posted (descending)
+      worksList.sort((a, b) => {
+        const aTime = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+        const bTime = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+        return bTime - aTime;
       });
 
       const userDocs = await Promise.all(
@@ -98,14 +107,14 @@ export default function WorksScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#E6F2FF' }}>
       {/* Header */}
       <LinearGradient
-  colors={['#3B7CF5', '#5AD9D5']}
-  start={{ x: 0, y: 0 }}
-  end={{ x: 1, y: 1 }}
-  style={[
-    styles.header,
+        colors={['#3B7CF5', '#5AD9D5']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[
+          styles.header,
           {
             paddingTop:
-              (Platform.OS === 'android' ? (StatusBar.currentHeight || 0) : 0) + 10, // +10px extra
+              (Platform.OS === 'android' ? (StatusBar.currentHeight || 0) : 0) + 10,
           },
         ]}
       >
@@ -208,20 +217,6 @@ export default function WorksScreen() {
                     Posted by: <Text style={styles.postedByHighlight}>{userNames[work.userId] || 'Loading...'}</Text>
                   </Text>
 
-                  <View style={styles.divider} />
-                  <View style={styles.statusRow}>
-                    <Text style={styles.statusLabel}>Status:</Text>
-                    <LinearGradient
-                      colors={work.status === 'active' ? ['#8bffa5ff', '#4CAF50'] : ['#ff838fff', '#F44336']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.statusTextGradient}
-                    >
-                      <Text style={styles.statusTextInner}>
-                        {work.status.charAt(0).toUpperCase() + work.status.slice(1)}
-                      </Text>
-                    </LinearGradient>
-                  </View>
                 </View>
               </LinearGradient>
             </TouchableOpacity>
@@ -253,7 +248,7 @@ const styles = StyleSheet.create({
   workCard: { borderRadius: 20, marginBottom: 16, overflow: 'hidden', elevation: 3 },
   cardBorder: { padding: 2, borderRadius: 20 },
   cardWhite: { backgroundColor: '#fff', borderRadius: 18, padding: 16 },
-  workTitle: { fontSize: 20, fontWeight: '700', color: '#3B7CF5', marginBottom: 12 },
+  workTitle: { fontSize: 20, fontWeight: '700', color: '#fc7c03ff', marginBottom: 12 },
   workDescription: { fontSize: 16, color: '#544d4d', marginBottom: 8 },
   categoryRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 18 },
   categoryLabel: { fontSize: 15, fontWeight: '600', color: '#3B7CF5', marginRight: 6 },
@@ -266,11 +261,7 @@ const styles = StyleSheet.create({
   subCardIcon: { marginRight: 6 },
   subCardValue: { fontSize: 16, fontWeight: '600', color: '#3B7CF5', marginLeft: 6, maxWidth: '75%' },
   postedBy: { fontSize: 16, fontWeight: '500', color: '#3B7CF5', marginBottom: 12 },
-  postedByHighlight: { fontWeight: '700', color: '#3B7CF5' },
-  statusRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', marginTop: 4 },
-  statusLabel: { fontSize: 16, color: '#3B7CF5', marginRight: 6 },
-  statusTextGradient: { borderRadius: 12, paddingHorizontal: 12, paddingVertical: 4 },
-  statusTextInner: { fontSize: 16, fontWeight: 'bold', color: '#fff' },
+  postedByHighlight: { fontWeight: '700', color: '#029200ff' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 });
 
@@ -279,3 +270,6 @@ const pickerSelectStyles = StyleSheet.create({
   inputAndroid: { fontSize: 14, color: '#3B7CF5', paddingVertical: 6, flex: 1 },
   placeholder: { color: '#888' },
 });
+
+
+

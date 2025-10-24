@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { getAuth, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -13,6 +13,7 @@ import {
   View,
   StatusBar,
   Platform,
+  RefreshControl,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db } from '../../../firebaseConfig';
@@ -21,37 +22,41 @@ import { LinearGradient } from 'expo-linear-gradient';
 const ProfileScreen = () => {
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false); // ✅ dynamic admin check
+  const [refreshing, setRefreshing] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const auth = getAuth();
   const currentUser = auth.currentUser;
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        if (!currentUser?.uid) {
-          router.replace('/auth/login');
-          return;
-        }
-
-        // Fetch user info
-        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-        if (userDoc.exists()) setUserData(userDoc.data());
-
-        // ✅ Check if user is admin from Firestore
-        const adminDoc = await getDoc(doc(db, 'admins', currentUser.uid));
-        setIsAdmin(adminDoc.exists());
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        Alert.alert('Error', 'Failed to load profile data');
-      } finally {
-        setLoading(false);
+  const fetchUserData = useCallback(async () => {
+    try {
+      if (!currentUser?.uid) {
+        router.replace('/auth/login');
+        return;
       }
-    };
 
-    fetchUserData();
+      setLoading(true);
+
+      // Fetch user info
+      const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+      if (userDoc.exists()) setUserData(userDoc.data());
+
+      // Check if user is admin from Firestore
+      const adminDoc = await getDoc(doc(db, 'admins', currentUser.uid));
+      setIsAdmin(adminDoc.exists());
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      Alert.alert('Error', 'Failed to load profile data');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   }, [currentUser]);
+
+  useEffect(() => {
+    fetchUserData();
+  }, [fetchUserData]);
 
   const handleLogout = async () => {
     try {
@@ -66,7 +71,12 @@ const ProfileScreen = () => {
 
   const handleEdit = () => router.push('/profile/editprofile');
   const handleAdmin = () => router.push('/admin/dashboard');
-  const handleContact = () => router.push('/profile/contact');
+  const handleComplain = () => router.push('/profile/complain'); // Updated button
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchUserData();
+  };
 
   if (loading) {
     return (
@@ -95,7 +105,12 @@ const ProfileScreen = () => {
         <Text style={styles.headerTitle}>Profile</Text>
       </LinearGradient>
 
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#3B7CF5']} />
+        }
+      >
         {/* Compact Profile Section */}
         <View style={styles.profileSection}>
           <Ionicons name="person-circle" size={100} color="#3B7CF5" />
@@ -127,34 +142,40 @@ const ProfileScreen = () => {
             <InfoRow label="Phone" value={userData?.phone || 'Not set'} />
             <InfoRow label="NID" value={userData?.nid || 'Not set'} />
             <InfoRow label="Member Since" value={userData?.createdAt?.toDate?.().toLocaleDateString() || 'Unknown'} />
-            <InfoRow label="Rating" value={
-              <View style={styles.ratingContainer}>
-                <Ionicons name="star" size={18} color="#e89d07" />
-                <Text style={styles.ratingText}>{(userData?.rating ?? 1).toFixed(2)}</Text>
-              </View>
-            } />
-            <InfoRow label="Verified" value={
-              <LinearGradient
-                colors={['#3B7CF5', '#5AD9D5']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.verifiedGradient}
-              >
-                <View style={styles.verifiedContainer}>
-                  {userData?.verified ? (
-                    <>
-                      <Ionicons name="checkmark-circle" size={18} color="#fff" />
-                      <Text style={styles.verifiedText}>Verified</Text>
-                    </>
-                  ) : (
-                    <>
-                      <Ionicons name="close-circle" size={18} color="#fff" />
-                      <Text style={styles.verifiedText}>Not Verified</Text>
-                    </>
-                  )}
+            <InfoRow
+              label="Rating"
+              value={
+                <View style={styles.ratingContainer}>
+                  <Ionicons name="star" size={18} color="#e89d07" />
+                  <Text style={styles.ratingText}>{(userData?.rating ?? 1).toFixed(2)}</Text>
                 </View>
-              </LinearGradient>
-            } />
+              }
+            />
+            <InfoRow
+              label="Verified"
+              value={
+                <LinearGradient
+                  colors={['#3B7CF5', '#5AD9D5']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.verifiedGradient}
+                >
+                  <View style={styles.verifiedContainer}>
+                    {userData?.verified ? (
+                      <>
+                        <Ionicons name="checkmark-circle" size={18} color="#fff" />
+                        <Text style={styles.verifiedText}>Verified</Text>
+                      </>
+                    ) : (
+                      <>
+                        <Ionicons name="close-circle" size={18} color="#fff" />
+                        <Text style={styles.verifiedText}>Not Verified</Text>
+                      </>
+                    )}
+                  </View>
+                </LinearGradient>
+              }
+            />
           </View>
         </LinearGradient>
 
@@ -175,7 +196,7 @@ const ProfileScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {/* ✅ Dynamic Admin Button Section */}
+        {/* Admin or Complain Button */}
         {isAdmin ? (
           <View style={[styles.buttonsRow, { marginTop: 0 }]}>
             <LinearGradient
@@ -191,20 +212,6 @@ const ProfileScreen = () => {
                 <Text style={styles.adminButtonText}>Admin Panel</Text>
               </TouchableOpacity>
             </LinearGradient>
-
-            <LinearGradient
-              colors={['#3B7CF5', '#5AD9D5']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={[styles.contactButton, { flex: 1, marginHorizontal: 6 }]}
-            >
-              <TouchableOpacity
-                onPress={handleContact}
-                style={{ width: '100%', alignItems: 'center' }}
-              >
-                <Text style={styles.contactButtonText}>Contact</Text>
-              </TouchableOpacity>
-            </LinearGradient>
           </View>
         ) : (
           <LinearGradient
@@ -214,10 +221,10 @@ const ProfileScreen = () => {
             style={[styles.contactButton, { width: '95%', marginTop: 20 }]}
           >
             <TouchableOpacity
-              onPress={handleContact}
+              onPress={handleComplain}
               style={{ width: '100%', alignItems: 'center' }}
             >
-              <Text style={styles.contactButtonText}>Contact</Text>
+              <Text style={styles.contactButtonText}>Give a Complain</Text>
             </TouchableOpacity>
           </LinearGradient>
         )}

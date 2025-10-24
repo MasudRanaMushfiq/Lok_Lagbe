@@ -25,7 +25,7 @@ export default function Layout() {
       <Stack.Screen name="profile/history" options={{ headerShown: false }} />
       <Stack.Screen name="profile/pendingwork" options={{ headerShown: false }} />
       <Stack.Screen name="profile/postedwork" options={{ headerShown: false }} />
-      <Stack.Screen name="profile/contact" options={{ headerShown: false }} />
+      <Stack.Screen name="profile/complain" options={{ headerShown: false }} />
 
       <Stack.Screen name="screen/activepost" options={{ headerShown: false }} />
       <Stack.Screen name="screen/allpost" options={{ headerShown: false }} />
@@ -36,6 +36,8 @@ export default function Layout() {
       <Stack.Screen name="screen/rating" options={{ headerShown: false }} />
       <Stack.Screen name="screen/viewuser" options={{ headerShown: false }} />
       <Stack.Screen name="screen/wallet" options={{ headerShown: false }} />
+      <Stack.Screen name="screen/showcomplain" options={{ headerShown: false }} />
+      <Stack.Screen name="screen/complainfeedback" options={{ headerShown: false }} />
 
       <Stack.Screen name="works/[work]" options={{ headerShown: false }} />
       <Stack.Screen name="alluser" options={{ headerShown: false }} />

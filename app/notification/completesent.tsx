@@ -102,7 +102,6 @@ export default function AcceptedSentNotification() {
       }
 
       Alert.alert('Success', 'Work marked as completed and money added to worker wallet!');
-
       router.push({
         pathname: '/screen/rating',
         params: { workId: work.id, ratedUserId: work.acceptedBy },
@@ -120,7 +119,21 @@ export default function AcceptedSentNotification() {
     setLoading(true);
     try {
       await updateDoc(doc(db, 'worked', work.id), { status: 'accepted' });
-      Alert.alert('Work rejected');
+
+      // 🔹 Added: Notify accepted user that work is not completed
+      if (work.acceptedBy) {
+        await addDoc(collection(db, 'notifications'), {
+          workId: work.id,
+          toUserId: work.acceptedBy,
+          fromUserId: currentUser?.uid || null,
+          message: `Your work "${work.jobTitle}" has been marked as not completed. Please complete it.`,
+          type: 'rejected',
+          read: false,
+          createdAt: serverTimestamp(),
+        });
+      }
+
+      Alert.alert('Work rejected and user notified');
       router.push('/Home');
     } catch (err: any) {
       console.error(err);

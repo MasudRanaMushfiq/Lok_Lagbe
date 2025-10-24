@@ -1,24 +1,47 @@
-import { Text, View, Image, StyleSheet, TouchableOpacity, StatusBar, Platform } from "react-native";
+import { useEffect, useState } from "react";
+import { Text, View, Image, StyleSheet, TouchableOpacity, StatusBar, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/firebaseConfig";
 
 export default function Index() {
   const router = useRouter();
+  const [checkingAuth, setCheckingAuth] = useState(true); // Loading state
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user && user.emailVerified) {
+        router.replace("/Home"); // Auto redirect to Home if user already logged in
+      } else {
+        setCheckingAuth(false); // Stop checking and show welcome screen
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleStart = () => {
-    router.replace("/auth/login"); // Navigate to login page
+    router.replace("/auth/login");
   };
+
+  if (checkingAuth) {
+    // Show loading while checking authentication state
+    return (
+      <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
+        <ActivityIndicator size="large" color="#3B7CF5" />
+        <Text style={{ marginTop: 10, color: "#3B7CF5", fontSize: 16 }}>Checking authentication...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor="#4A8FF0"
-      />
+      <StatusBar barStyle="light-content" backgroundColor="#4A8FF0" />
 
       {/* Logo/Icon */}
       <Image
-        source={require("../assets/images/icon.png")} // Make sure the icon.png exists
+        source={require("../assets/images/icon.png")}
         style={styles.icon}
         resizeMode="contain"
       />
@@ -45,7 +68,7 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E6F2FF', // Light theme background
+    backgroundColor: '#E6F2FF',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,

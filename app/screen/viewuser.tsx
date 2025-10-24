@@ -120,7 +120,7 @@ export default function ViewUserScreen() {
   } = user;
 
   const ratingNum = Number(rating) || 0;
-  const skillPercent = postedWorksCount > 0 ? Math.round((acceptedWorksCount / postedWorksCount) * 100) : 0;
+const skillPercent = postedWorksCount > 0 ? Math.min(Math.round((acceptedWorksCount / postedWorksCount) * 100), 100) : 0;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#E6F2FF' }}>

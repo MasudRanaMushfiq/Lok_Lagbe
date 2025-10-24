@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "LokLagbe",
-    "slug": "loklagbe",
+    "slug": "loklagbeapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -49,9 +49,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "a487e46c-c38f-4791-b633-df2e62c9792d"
+        "projectId": "007b4d64-9070-4f4c-80cd-f5a91a0b00a5"
       }
     },
-    "owner": "myblinkfile"
+    "owner": "myownstudent"
   }
 }

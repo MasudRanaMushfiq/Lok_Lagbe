@@ -27,7 +27,8 @@ type Notification = {
   message: string;
   createdAt: any;
   read: boolean;
-  workId: string;
+  workId?: string;
+  complainId?: string;
   type: string;
 };
 
@@ -62,6 +63,7 @@ export default function NotificationsScreen() {
             createdAt: data.createdAt,
             read: data.read,
             workId: data.workId,
+            complainId: data.complainId,
             type: data.type,
           });
         });
@@ -80,6 +82,7 @@ export default function NotificationsScreen() {
   const handleNotificationPress = (item: Notification) => {
     switch (item.type) {
       case 'general':
+        // Forward the clicked notification id
         router.push({ pathname: '/notification/general', params: { id: item.id } });
         break;
       case 'accepted':
@@ -114,13 +117,10 @@ export default function NotificationsScreen() {
     );
   };
 
-  // Always show header regardless of loading or empty notifications
   return (
     <View style={styles.background}>
-      {/* StatusBar */}
-      <StatusBar backgroundColor="#4A8FF0" barStyle="light-content" />
+      <StatusBar backgroundColor="#transparent" barStyle="light-content" />
 
-      {/* Gradient Header */}
       <LinearGradient
         colors={['#4A8FF0', '#65D4C9']}
         start={{ x: 0, y: 0 }}
@@ -136,7 +136,6 @@ export default function NotificationsScreen() {
         <Text style={styles.headerTitle}>Notifications</Text>
       </LinearGradient>
 
-      {/* Main Content */}
       {loading ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" color="#3B7CF5" />
